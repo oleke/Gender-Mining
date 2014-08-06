@@ -1,0 +1,1 @@
+6/8 - Explored Graph Api. Chose to use Facebook graph explorer to crawl all my friends and their posts plus probably friends of my friends as well.
