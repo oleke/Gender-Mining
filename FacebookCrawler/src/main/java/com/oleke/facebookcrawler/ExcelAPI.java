@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.oleke.facebookcrawler;
 
 import java.io.File;
@@ -32,21 +31,21 @@ import org.apache.poi.ss.usermodel.Workbook;
  *
  * @author Biodun
  */
-public class ExcelAPI {
-    
+class ExcelAPI {
+
     /*
-    * Cells Constants
-    */
+     * Cells Constants
+     */
     private static final int s_id = 0;
     private static final int about = 1;
     private static final int bio = 2;
     private static final int birthday = 3;
-    private static final int education_level=  4;
-    private static final int name  =5;
+    private static final int education_level = 4;
+    private static final int name = 5;
     private static final int age_range = 6;
     private static final int political_view = 7;
     private static final int quotes = 8;
-    private static final int religion =9;
+    private static final int religion = 9;
     private static final int relationship_status = 10;
     private static final int album_no = 11;
     private static final int no_pictures = 12;
@@ -56,37 +55,35 @@ public class ExcelAPI {
     private static final int no_pages = 16;
     private static final int s_gender = 17;
     private static final int p_id = 0;
-    private static final int post  = 1;
+    private static final int post = 1;
     private static final int p_gender = 2;
-    
-    
+
     /**
-    * Constructor 
-    */   
-    
-     public ExcelAPI(){     
+     * Constructor
+     */
+    public ExcelAPI() {
     }
-     
+
     /**
-    * This Constructor initializes an Excel Sheet for Writing
-    * @param filename The output/input filename
-    * @param sheetname the name of the sheet
-    * @return Returns a Sheet for Writing
-    */  
-     
-    public Sheet ExcelAPI(String filename,String sheetname){
+     * This Constructor initializes an Excel Sheet for Writing
+     *
+     * @param filename The output/input filename
+     * @param sheetname the name of the sheet
+     * @return Returns a Sheet for Writing
+     */
+    public Sheet ExcelAPI(String filename, String sheetname) {
         Sheet initExcel = initExcel(filename, sheetname);
         return initExcel;
     }
-    
+
     /**
-    * This method creates an Excel Workbook and an Excel Sheet
-    * @param filename The output filename
-    * @param sheetname the name of the sheet
-    * @return Returns a new workbook
-    */
-    
-    private Workbook createExcel(String filename,String sheetname){        
+     * This method creates an Excel Workbook and an Excel Sheet
+     *
+     * @param filename The output filename
+     * @param sheetname the name of the sheet
+     * @return Returns a new workbook
+     */
+    public Workbook createExcel(String filename, String sheetname) {
         try {
             FileOutputStream out = new FileOutputStream(filename);
             Workbook wb = new HSSFWorkbook();
@@ -98,57 +95,54 @@ public class ExcelAPI {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
-        
+
     }
-    
-    
+
     /**
-    * This method loads an Excel Workbook
-    * @param filename The input filename 
-    * @return Returns an existing workbook
-    */
-    
-    private Workbook loadExcel(String filename){
-        Workbook wbk = null;        
+     * This method loads an Excel Workbook
+     *
+     * @param filename The input filename
+     * @return Returns an existing workbook
+     */
+    public Workbook loadExcel(String filename) {
+        Workbook wbk = null;
         try {
-                FileInputStream in = new FileInputStream(filename);
-                wbk = new HSSFWorkbook(in);
-                
-            } catch (IOException ex) {
-                Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            FileInputStream in = new FileInputStream(filename);
+            wbk = new HSSFWorkbook(in);
+
+        } catch (IOException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return wbk;
     }
-    
-    
+
     /**
-    * This method initializes an Excel Workbook and an Excel Sheet
-    * @param filename The output/input filename
-    * @param sheetname the name of the sheet
-    * @return Returns a Sheet
-    */
-    
-    private Sheet initExcel(String filename,String sheetname){
-        Workbook wbk;        
-        if(!new File(filename).exists()){
-        wbk = createExcel(filename,sheetname);
-        }
-        else{   
+     * This method initializes an Excel Workbook and an Excel Sheet
+     *
+     * @param filename The output/input filename
+     * @param sheetname the name of the sheet
+     * @return Returns a Sheet
+     */
+    public Sheet initExcel(String filename, String sheetname) {
+        Workbook wbk;
+        if (!new File(filename).exists()) {
+            wbk = createExcel(filename, sheetname);
+        } else {
             wbk = loadExcel(filename);
         }
         Sheet sh;
         sh = wbk.getSheet(sheetname);
         return sh;
-    }   
-    
+    }
+
     /**
-    * This method writes all changes made to a workbook
-    * @param filename The output filename
-    * @param wbk The input workbook 
-    * @return Returns true if changes were written to file
-    */
-    
-    private boolean commitChanges(String filename, Workbook wbk){
+     * This method writes all changes made to a workbook
+     *
+     * @param filename The output filename
+     * @param wbk The input workbook
+     * @return Returns true if changes were written to file
+     */
+    public boolean commitChanges(String filename, Workbook wbk) {
         try {
             FileOutputStream out = new FileOutputStream(filename);
             wbk.write(out);
@@ -159,71 +153,70 @@ public class ExcelAPI {
         }
         return false;
     }
-    
+
     /**
-    * This method creates a new row on a sheet  
-    * @param sh the sheet to write on
-    * @return Returns a new row
-    */
-    
-    private Row createRow(Sheet sh){
-        int rowNo = sh.getPhysicalNumberOfRows() - 1 ;
+     * This method creates a new row on a sheet
+     *
+     * @param sh the sheet to write on
+     * @return Returns a new row
+     */
+    public Row createRow(Sheet sh) {
+        int rowNo = sh.getPhysicalNumberOfRows() - 1;
         Row rw = sh.createRow(rowNo);
-        return rw ;
+        return rw;
     }
-    
+
     /**
-    * This method writes on a cell in a Row
-    * @param rw The row to write on
-    * @param cellNo The ordinal number of the cell to write on
-    * @param cellValue The value to write on the cell 
-    */
-    
-    private void addCell(Row rw,int cellNo, String cellValue){
+     * This method writes on a cell in a Row
+     *
+     * @param rw The row to write on
+     * @param cellNo The ordinal number of the cell to write on
+     * @param cellValue The value to write on the cell
+     */
+    public void addCell(Row rw, int cellNo, String cellValue) {
         Cell cl = rw.createCell(cellNo);
-        cl.setCellValue(cellValue);        
+        cl.setCellValue(cellValue);
     }
-    
+
     /**
-    * This method creates the headers for the FaceBook statistics file    
-    * @param sh the sheet to write on   
-    */
-    
-    private void F_Stats_Header(Sheet sh){
-    Row r = createRow(sh);
-    addCell(r,s_id,"id");
-    addCell(r,about,"about");
-    addCell(r,bio,"bio");
-    addCell(r,birthday,"birthday");
-    addCell(r,education_level,"education_level");
-    addCell(r,name,"name");
-    addCell(r,age_range,"age_range");
-    addCell(r,political_view,"political_view");
-    addCell(r,quotes,"quotes");
-    addCell(r,religion,"religion");
-    addCell(r,relationship_status,"relationship_status");
-    addCell(r,album_no,"album_no");
-    addCell(r,no_pictures,"no_pictures");
-    addCell(r,no_of_games,"no_of_games");
-    addCell(r,no_of_groups,"no_of_groups");
-    addCell(r,no_posts,"no_posts");
-    addCell(r,no_pages,"no_pages");
-    addCell(r,s_gender,"gender");
-    commitChanges("stats.xls",sh.getWorkbook());    
+     * This method creates the headers for the FaceBook statistics file
+     *
+     * @param sh the sheet to write on
+     */
+    public void F_Stats_Header(Sheet sh) {
+        Row r = createRow(sh);
+        addCell(r, s_id, "id");
+        addCell(r, about, "about");
+        addCell(r, bio, "bio");
+        addCell(r, birthday, "birthday");
+        addCell(r, education_level, "education_level");
+        addCell(r, name, "name");
+        addCell(r, age_range, "age_range");
+        addCell(r, political_view, "political_view");
+        addCell(r, quotes, "quotes");
+        addCell(r, religion, "religion");
+        addCell(r, relationship_status, "relationship_status");
+        addCell(r, album_no, "album_no");
+        addCell(r, no_pictures, "no_pictures");
+        addCell(r, no_of_games, "no_of_games");
+        addCell(r, no_of_groups, "no_of_groups");
+        addCell(r, no_posts, "no_posts");
+        addCell(r, no_pages, "no_pages");
+        addCell(r, s_gender, "gender");
+        commitChanges("stats.xls", sh.getWorkbook());
     }
-    
-    
+
     /**
-    * This method creates the headers for the FaceBook posts file    
-    * @param sh the sheet to write on   
-    */
-    
-    private void F_Posts_Header(Sheet sh){        
-    Row r = createRow(sh);
-    addCell(r,s_id,"id");
-    addCell(r,post,"post");
-    addCell(r,p_gender,"gender");
-    commitChanges("posts.xls",sh.getWorkbook());    
+     * This method creates the headers for the FaceBook posts file
+     *
+     * @param sh the sheet to write on
+     */
+    public void F_Posts_Header(Sheet sh) {
+        Row r = createRow(sh);
+        addCell(r, p_id, "id");
+        addCell(r, post, "post");
+        addCell(r, p_gender, "gender");
+        commitChanges("posts.xls", sh.getWorkbook());
     }
-    
+
 }

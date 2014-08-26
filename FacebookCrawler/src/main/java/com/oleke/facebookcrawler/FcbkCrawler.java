@@ -19,6 +19,11 @@ import com.restfb.Connection;
 import com.restfb.DefaultFacebookClient;
 import com.restfb.FacebookClient;
 import com.restfb.types.User;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -35,7 +40,12 @@ public class FcbkCrawler {
     private ArrayList<String> friendsList;
     private ThreadGroup tGroup;
 
-   
+    /**
+     * Constructor
+     */
+    public FcbkCrawler() {
+
+    }
 
     /**
      * Constructor
@@ -47,30 +57,32 @@ public class FcbkCrawler {
         friendsList = new ArrayList<String>();
         tGroup = new ThreadGroup("getFriends");
     }
-    
+
     /**
      * Set the accessToken value
+     *
      * @param accessToken FaceBook Access Token
      */
     public void setFacebookClient(String accessToken) {
         client = new DefaultFacebookClient(accessToken);
     }
-    
+
     /**
      * Gets the FaceBook Client
+     *
      * @return returns the a Client Session
      */
     public FacebookClient getFacebookClient() {
         return client;
-    }  
+    }
 
-    
     /**
      * Get the friends of a user
-     * @param id The FaceBook user id for the getFriends request
-     * The user with starting id  is 'me'
+     *
+     * @param id The FaceBook user id for the getFriends request The user with
+     * starting id is 'me'
      */
-    private void getFriends(String id) {
+    public void getFriends(String id) {
         try {
             //Create a temporary string arraylist
             ArrayList<String> temp;
@@ -91,16 +103,16 @@ public class FcbkCrawler {
                     }
                 }
             }
-            
+
             //Recursive Call to get Friends of friends
             for (final String i : temp) {
-                Thread t = new Thread(tGroup,new Runnable() {
+                Thread t = new Thread(tGroup, new Runnable() {
                     public void run() {
                         getFriends(i);
-                        Thread.currentThread().interrupt();                       
+                        Thread.currentThread().interrupt();
                     }
                 });
-              
+
                 t.start();
             }
 
@@ -108,23 +120,51 @@ public class FcbkCrawler {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
         }
     }
-    
 
     /**
      * Get the Crawled Friends List
+     *
      * @return Returns an array of Friends List
      */
     public ArrayList<String> getFriendsList() {
         return friendsList;
     }
-    
+
     /**
      * Returns a ThreadGroup Associated with the GetFriends Method Call
+     *
      * @return a Thread Group
      */
-     public ThreadGroup getTGroup() {
+    public ThreadGroup getTGroup() {
         return tGroup;
     }
-    
+
+    public void writeToFile(String filename, ArrayList<String> list) {
+        try {
+            for (String id : list) {
+                BufferedWriter wr = new BufferedWriter(new FileWriter(filename, true));
+                wr.newLine();
+                wr.write(id);
+                wr.close();
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(FcbkCrawler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public ArrayList<String> readFromFile(String filename) {
+        ArrayList<String> list = new ArrayList<String>();
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(filename));
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                list.add(line);
+            }
+            br.close();
+        } catch (IOException ex) {
+            Logger.getLogger(FcbkCrawler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }
 
 }

@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.oleke.facebookcrawler;
 
-public class App 
-{
-    
+import java.util.ArrayList;
 
-    private static final String accessToken = "CAACEdEose0cBAJKZCSyATvUHIf9WhQZCOdmn2Y0ZAXnzZCaIYZCLbMYcg7fKki0oZAHbzsNszJpHNBQSyXk2yZAYllEMn0I1XIo03GyDY8nZBqUcxt59o5ZCIGKUClNufGB8H83DMuZCinZBFRYcObnDykLWbY0qirZC4sZCtO7NnSBwEETAYjiC6ZBZBGYfpDqh1KOTXN1fxH4QDkLJZByiQM1uXeZB22rlSjHNZBm0YZD";    
-     
-   
-    public static void main( String[] args )
-    {    
-               
+public class App {
+
+    private static final String accessToken = "CAACEdEose0cBAJKZCSyATvUHIf9WhQZCOdmn2Y0ZAXnzZCaIYZCLbMYcg7fKki0oZAHbzsNszJpHNBQSyXk2yZAYllEMn0I1XIo03GyDY8nZBqUcxt59o5ZCIGKUClNufGB8H83DMuZCinZBFRYcObnDykLWbY0qirZC4sZCtO7NnSBwEETAYjiC6ZBZBGYfpDqh1KOTXN1fxH4QDkLJZByiQM1uXeZB22rlSjHNZBm0YZD";
+
+    public static void main(String[] args) {
+        
     }
 }
-
