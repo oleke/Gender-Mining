@@ -15,13 +15,10 @@
  */
 package com.oleke.facebookcrawler;
 
-import java.util.ArrayList;
-
 public class App {
 
-    private static final String accessToken = "CAACEdEose0cBAJKZCSyATvUHIf9WhQZCOdmn2Y0ZAXnzZCaIYZCLbMYcg7fKki0oZAHbzsNszJpHNBQSyXk2yZAYllEMn0I1XIo03GyDY8nZBqUcxt59o5ZCIGKUClNufGB8H83DMuZCinZBFRYcObnDykLWbY0qirZC4sZCtO7NnSBwEETAYjiC6ZBZBGYfpDqh1KOTXN1fxH4QDkLJZByiQM1uXeZB22rlSjHNZBm0YZD";
+    private static final String accessToken = "CAACEdEose0cBAJ6cQF0paZCZAOJ3dpXZAZAzOBwux4ZBmtxcMJAn5lfwmTF5nhryy9ItTTuWiPkhHRgUNfyzW1vailzBbUq1AYPza0ZCmhlpkOTHjBR1zPuQZB7zIVpOgcuTM3n6jNLlb3OK0u5Cyp7veESaguNpi4zmbraM7RoYmC2TjuDwM5L7exCJZCcRo34ZBJXW4EUFWAkaqAkP9t7ycjs8IgQ4jSyAZD";
 
-    public static void main(String[] args) {
-        
+    public static void main(String[] args) {                          
     }
 }

@@ -52,8 +52,9 @@ class ExcelAPI {
     private static final int no_of_games = 13;
     private static final int no_of_groups = 14;
     private static final int no_posts = 15;
-    private static final int no_pages = 16;
-    private static final int s_gender = 17;
+    private static final int no_tagged_posts = 16;
+    private static final int no_pages = 17;
+    private static final int s_gender = 18;
     private static final int p_id = 0;
     private static final int post = 1;
     private static final int p_gender = 2;
@@ -201,6 +202,7 @@ class ExcelAPI {
         addCell(r, no_of_games, "no_of_games");
         addCell(r, no_of_groups, "no_of_groups");
         addCell(r, no_posts, "no_posts");
+        addCell(r, no_tagged_posts, "no_tagged_posts");
         addCell(r, no_pages, "no_pages");
         addCell(r, s_gender, "gender");
         commitChanges("stats.xls", sh.getWorkbook());
