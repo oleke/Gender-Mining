@@ -24,17 +24,12 @@ import com.restfb.types.Page;
 import com.restfb.types.Post;
 import com.restfb.types.User;
 import com.restfb.types.User.Education;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.poi.ss.usermodel.Sheet;
 
 /**
  *
@@ -44,6 +39,7 @@ public class FcbkCrawler {
 
     private FacebookClient client;
     private ArrayList<String> friendsList;
+    private ArrayList<String> crawled;
     private ThreadGroup tGroup;
     private int noAlbums = 0;
     private int noPictures = 0;
@@ -74,11 +70,23 @@ public class FcbkCrawler {
      * Constructor
      *
      * @param accessToken FaceBook Access Token
+     * @param existingList A list of users in database
+     * @param crawled A list of crawled users
      */
-    public FcbkCrawler(String accessToken) {
+    public FcbkCrawler(String accessToken, ArrayList<String> existingList, ArrayList<String> crawled) {
         this.client = new DefaultFacebookClient(accessToken);
-        this.friendsList = new ArrayList<String>();
+        this.friendsList = existingList;
+        this.crawled = crawled;
         this.tGroup = new ThreadGroup("getFriends");
+    }
+
+    /**
+     * Gets the Crawled Users
+     *
+     * @return returns the list of crawled users
+     */
+    public ArrayList<String> getCrawled() {
+        return crawled;
     }
 
     /**
@@ -114,32 +122,34 @@ public class FcbkCrawler {
             Connection<User> myFriends;
             myFriends = client.fetchConnection(id + "/friends", User.class);
             //Create an Iterator to traverse the list
-            List<User> iterator = myFriends.getData();
+            Iterator<List<User>> iterator = myFriends.iterator();
+            while (iterator.hasNext()) {
+                List<User> friends = iterator.next();
+                //Loop the list            
+                for (User u : friends) {
+                    //add the user id to the friends's list
+                    if (!friendsList.contains(u.getId())) {
+                        friendsList.add(u.getId());
+                        //add the new user id to the temporary list
+                        temp.add(u.getId());
+                    }
+                }
 
-            //Loop the list            
-            for (User u : iterator) {
-                //add the user id to the friends's list
-                if (!friendsList.contains(u.getId())) {
-                    friendsList.add(u.getId());
-                    //add the new user id to the temporary list
-                    temp.add(u.getId());
+                //Recursive Call to get Friends of friends
+                for (final String i : temp) {
+                    Thread t = new Thread(tGroup, new Runnable() {
+                        public void run() {
+                            getFriends(i);
+                            Thread.currentThread().interrupt();
+                        }
+                    });
+
+                    t.start();
                 }
             }
 
-            //Recursive Call to get Friends of friends
-            for (final String i : temp) {
-                Thread t = new Thread(tGroup, new Runnable() {
-                    public void run() {
-                        getFriends(i);
-                        Thread.currentThread().interrupt();
-                    }
-                });
-
-                t.start();
-            }
-
         } catch (Exception e) {
-            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
+            //Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
         }
     }
 
@@ -162,46 +172,6 @@ public class FcbkCrawler {
     }
 
     /**
-     * Write list to file
-     *
-     * @param filename The output file name
-     * @param list The input list
-     */
-    public void writeToFile(String filename, ArrayList<String> list) {
-        try {
-            for (String id : list) {
-                BufferedWriter wr = new BufferedWriter(new FileWriter(filename, true));
-                wr.newLine();
-                wr.write(id);
-                wr.close();
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(FcbkCrawler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    /**
-     * Read from file to list
-     *
-     * @param filename
-     * @return Returns a list of the file data
-     */
-    public ArrayList<String> readFromFile(String filename) {
-        ArrayList<String> list = new ArrayList<String>();
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(filename));
-            String line = "";
-            while ((line = br.readLine()) != null) {
-                list.add(line);
-            }
-            br.close();
-        } catch (IOException ex) {
-            Logger.getLogger(FcbkCrawler.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return list;
-    }
-
-    /**
      * Get User Details
      *
      * @param id
@@ -219,11 +189,15 @@ public class FcbkCrawler {
      * @return the Age of the user
      */
     public int getAge(Date dob) {
-        Date current_date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("Y");
-        int year_of_birth = Integer.parseInt(sdf.format(dob));
-        int current_year = Integer.parseInt(sdf.format(current_date));
-        return current_year - year_of_birth;
+        if (dob != null) {
+            Date current_date = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("Y");
+            int year_of_birth = Integer.parseInt(sdf.format(dob));
+            int current_year = Integer.parseInt(sdf.format(current_date));
+            return current_year - year_of_birth;
+        } else {
+            return 0;
+        }
     }
 
     /**
@@ -288,15 +262,18 @@ public class FcbkCrawler {
      */
     private void getAlbums(String id) {
         Connection<Album> albums = client.fetchConnection(id + "/albums", Album.class);
-        List<Album> data = albums.getData();
-        this.noAlbums = data.size();
+        Iterator<List<Album>> iterator = albums.iterator();        
         int no_pics = 0;
-        for (Album al : data) {
+        while(iterator.hasNext()){
+            List<Album> data = iterator.next();
+            this.noAlbums+=data.size();
+            for (Album al : data) {
             if (al.getCount() != null) {
-                no_pics += al.getCount();
+                this.noPictures += al.getCount();
             }
         }
-        this.noPictures = no_pics;
+        }                              
+        
     }
 
     /**
@@ -323,41 +300,60 @@ public class FcbkCrawler {
 
     /**
      * Get No of groups the user belong to
+     *
      * @param id user id
      * @return the Number of groups
      */
     public int getNoGroups(String id) {
         Connection<Group> groups = client.fetchConnection(id + "/groups", Group.class);
-        List<Group> data = groups.getData();
-        return data.size();
+        Iterator<List<Group>> iterator =groups.iterator();
+        int size = 0;
+        while(iterator.hasNext()){
+            List<Group> data = iterator.next();
+            size+=data.size();
+        }
+        return size;
     }
 
     /**
      * No of User Posts
+     *
      * @param id user id
      * @return Returns the no of posts
      */
     public int getNoPosts(String id) {
         Connection<Post> posts = client.fetchConnection(id + "/posts", Post.class);
-        List<Post> data = posts.getData();
-        return data.size();
+        Iterator<List<Post>> iterator = posts.iterator();
+        int size = 0;
+        while(iterator.hasNext()){
+            List<Post> data = iterator.next();
+            size+=data.size();
+        }
+        return size;
     }
 
     /**
      * Gets User Posts
+     *
      * @param id user id
      * @return Returns an array of user posts
      */
-    public List<Post> getPosts(String id) {
+    public ArrayList<Post> getPosts(String id) {        
+        ArrayList<Post> data = new ArrayList<Post>();
         Connection<Post> posts = client.fetchConnection(id + "/posts", Post.class);
-        List<Post> data = posts.getData();
-        posts = client.fetchConnection(id + "/tagged", Post.class);
-        data.addAll(posts.getData());
+        Iterator<List<Post>> iterator = posts.iterator();
+        while (iterator.hasNext()) {
+            List<Post> data1 = iterator.next();
+            for (Post p : data1)
+                data.add(p);
+        }
+
         return data;
     }
 
     /**
      * Gets the number of posts a user was tagged in
+     *
      * @param id user id
      * @return Returns the number of tagged posts
      */
@@ -369,6 +365,7 @@ public class FcbkCrawler {
 
     /**
      * Gets the No of Pages
+     *
      * @param id user id
      * @return Returns the number of pages a user likes
      */
@@ -376,5 +373,9 @@ public class FcbkCrawler {
         Connection<Page> pages = client.fetchConnection(id + "/likes", Page.class);
         List<Page> data = pages.getData();
         return data.size();
+    }
+
+    public void crawlUser(String id, Sheet sh) {
+
     }
 }

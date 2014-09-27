@@ -15,10 +15,15 @@
  */
 package com.oleke.facebookcrawler;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -36,45 +41,32 @@ class ExcelAPI {
     /*
      * Cells Constants
      */
-    private static final int s_id = 0;
-    private static final int about = 1;
-    private static final int bio = 2;
-    private static final int birthday = 3;
-    private static final int education_level = 4;
-    private static final int name = 5;
-    private static final int age_range = 6;
-    private static final int political_view = 7;
-    private static final int quotes = 8;
-    private static final int religion = 9;
-    private static final int relationship_status = 10;
-    private static final int album_no = 11;
-    private static final int no_pictures = 12;
-    private static final int no_of_games = 13;
-    private static final int no_of_groups = 14;
-    private static final int no_posts = 15;
-    private static final int no_tagged_posts = 16;
-    private static final int no_pages = 17;
-    private static final int s_gender = 18;
-    private static final int p_id = 0;
-    private static final int post = 1;
-    private static final int p_gender = 2;
+    public static final int s_id = 0;
+    public static final int about = 1;
+    public static final int bio = 2;    
+    public static final int education_level = 3;
+    public static final int name = 4;
+    public static final int age_range = 5;
+    public static final int political_view = 6;
+    public static final int quotes = 7;
+    public static final int religion = 8;
+    public static final int relationship_status = 9;
+    public static final int album_no = 10;
+    public static final int no_pictures = 11;    
+    public static final int no_of_groups = 12;
+    public static final int no_posts = 13;
+    public static final int no_tagged_posts = 14;
+    public static final int no_pages = 15;
+    public static final int s_gender = 16;
+    public static final int p_id = 0;
+    public static final int post = 1;
+    public static final int post_type = 2;
+    public static final int p_gender = 3;
 
     /**
      * Constructor
      */
     public ExcelAPI() {
-    }
-
-    /**
-     * This Constructor initializes an Excel Sheet for Writing
-     *
-     * @param filename The output/input filename
-     * @param sheetname the name of the sheet
-     * @return Returns a Sheet for Writing
-     */
-    public Sheet ExcelAPI(String filename, String sheetname) {
-        Sheet initExcel = initExcel(filename, sheetname);
-        return initExcel;
     }
 
     /**
@@ -86,7 +78,7 @@ class ExcelAPI {
      */
     public Workbook createExcel(String filename, String sheetname) {
         try {
-            FileOutputStream out = new FileOutputStream(filename);
+            FileOutputStream out = new FileOutputStream(filename+".xls");
             Workbook wb = new HSSFWorkbook();
             wb.createSheet(sheetname);
             wb.write(out);
@@ -108,7 +100,7 @@ class ExcelAPI {
     public Workbook loadExcel(String filename) {
         Workbook wbk = null;
         try {
-            FileInputStream in = new FileInputStream(filename);
+            FileInputStream in = new FileInputStream(filename+".xls");
             wbk = new HSSFWorkbook(in);
 
         } catch (IOException ex) {
@@ -126,7 +118,7 @@ class ExcelAPI {
      */
     public Sheet initExcel(String filename, String sheetname) {
         Workbook wbk;
-        if (!new File(filename).exists()) {
+        if (!new File(filename+".xls").exists()) {
             wbk = createExcel(filename, sheetname);
         } else {
             wbk = loadExcel(filename);
@@ -145,7 +137,7 @@ class ExcelAPI {
      */
     public boolean commitChanges(String filename, Workbook wbk) {
         try {
-            FileOutputStream out = new FileOutputStream(filename);
+            FileOutputStream out = new FileOutputStream(filename+".xls");
             wbk.write(out);
             out.close();
             return true;
@@ -162,7 +154,7 @@ class ExcelAPI {
      * @return Returns a new row
      */
     public Row createRow(Sheet sh) {
-        int rowNo = sh.getPhysicalNumberOfRows() - 1;
+        int rowNo = sh.getPhysicalNumberOfRows();
         Row rw = sh.createRow(rowNo);
         return rw;
     }
@@ -188,8 +180,7 @@ class ExcelAPI {
         Row r = createRow(sh);
         addCell(r, s_id, "id");
         addCell(r, about, "about");
-        addCell(r, bio, "bio");
-        addCell(r, birthday, "birthday");
+        addCell(r, bio, "bio");        
         addCell(r, education_level, "education_level");
         addCell(r, name, "name");
         addCell(r, age_range, "age_range");
@@ -198,14 +189,13 @@ class ExcelAPI {
         addCell(r, religion, "religion");
         addCell(r, relationship_status, "relationship_status");
         addCell(r, album_no, "album_no");
-        addCell(r, no_pictures, "no_pictures");
-        addCell(r, no_of_games, "no_of_games");
+        addCell(r, no_pictures, "no_pictures");        
         addCell(r, no_of_groups, "no_of_groups");
         addCell(r, no_posts, "no_posts");
         addCell(r, no_tagged_posts, "no_tagged_posts");
         addCell(r, no_pages, "no_pages");
         addCell(r, s_gender, "gender");
-        commitChanges("stats.xls", sh.getWorkbook());
+        commitChanges("stats", sh.getWorkbook());
     }
 
     /**
@@ -217,8 +207,56 @@ class ExcelAPI {
         Row r = createRow(sh);
         addCell(r, p_id, "id");
         addCell(r, post, "post");
+        addCell(r, post_type, "post_type");
         addCell(r, p_gender, "gender");
-        commitChanges("posts.xls", sh.getWorkbook());
+        commitChanges("posts", sh.getWorkbook());
     }
+    
+    /**
+     * Write list to file
+     *
+     * @param filename The output file name
+     * @param list The input list
+     */
+    public void writeToFile(String filename, ArrayList<String> list) {
+        try {
+            ArrayList<String> existingList = readFromFile(filename);
+            for (String id : list) {
+                if(!existingList.contains(id)){
+                BufferedWriter wr = new BufferedWriter(new FileWriter(filename, true));
+                wr.newLine();
+                wr.write(id);
+                wr.close();
+                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(FcbkCrawler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Read from file to list
+     *
+     * @param filename
+     * @return Returns a list of the file data
+     */
+    public ArrayList<String> readFromFile(String filename) {
+        ArrayList<String> list = new ArrayList<String>();
+        try {            
+            File fs = new File(filename);
+            if(!fs.exists())
+                fs.createNewFile();            
+            BufferedReader br = new BufferedReader(new FileReader(filename));
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                list.add(line);
+            }
+            br.close();
+        } catch (IOException ex) {
+            Logger.getLogger(FcbkCrawler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return list;
+    }    
+    
 
 }
