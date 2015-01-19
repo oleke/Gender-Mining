@@ -20,15 +20,18 @@ install.packages("RWekajars")
 install.packages("wordnet")
 install.packages("RTextTools")
 library(arulesViz)
+library(class)
 library(tm)
 library(wordcloud)
 library(SnowballC)
 library(arules)
+library(rpart)
 library(RWeka)
 library(rJava)
 library(RWekajars)
 library(wordnet)
 library(RTextTools)
+
 setwd("~/Github/Gender-Mining/Text Mining")
 #stats = read.csv("stats.csv",header = TRUE)
 #stats2 = read.csv("stat.csv",header = TRUE)
@@ -39,19 +42,8 @@ post_data = rbind(posts,posts2)
 #################################################
 Cleaning the data
 ################################################
-#stats$about <- NULL
-#stats$religion <- NULL
-#stats$political_view <- NULL
-#stats$bio = as.character(stats$bio)
-#stats$id = as.character(stats$id)
-#stats$quotes = as.character(stats$quotes)
-#stats$relationship_status = as.character(stats$relationship_status)
-#stats$bio[stats$bio=='NA'] = NA
-#stats$quotes[stats$quotes=='NA'] = NA
-#stats$relationship_status[stats$relationship_status=='NA'] = NA
-
-post_data$post = as.character(post_data$post)
-post_data$id = as.character(post_data$id)
+#post_data$post = as.character(post_data$post)
+#post_data$id = as.character(post_data$id)
 post_data$post[post_data$post==''] = NA
 #View(stats)
 post_data = na.omit(post_data)
@@ -65,56 +57,65 @@ post_data = na.omit(post_data)
 
 post_data$gender = factor(post_data$gender,levels = c("male","female"),labels = c("Male","Female"))
 #stats$gender = factor(stats$gender,levels = c("male","female"),labels = c("Male","Female"))
-summary(post_data)
-male_data = as.vector(post_data$post[post_data$gender=='Male'])
-summary(male_data)
-female_data = post_data$post[post_data$gender=='Female']
-male_train = data.frame(male_data[1:round(0.75 * length(male_data))])
-male_test = data.frame(male_data[(round(0.75 * length(male_data))+1):length(male_data)])
-female_train = data.frame(female_data[1:round(0.75 * length(female_data))])
-female_test = data.frame(female_data[(round(0.75 * length(female_data))+1):length(female_data)])
+#male_data = as.vector(post_data$post[post_data$gender=='Male'])
+male_data = post_data$post[post_data$gender=='Male']
+#summary(male_data)
+#female_data = post_data$post[post_data$gender=='Female']
+male_train = data.frame(male_data[1:round(0.75 * length(male_data))/4])
+#female_train = data.frame(female_data[1:round(0.75 * length(female_data))])
+#female_test = data.frame(female_data[(round(0.75 * length(female_data))+1):length(female_data)])
 
-myCorpus <- Corpus(VectorSource(male_train))
-myCorpus <- tm_map(myCorpus, tolower)
-# remove punctuation
-myCorpus <- tm_map(myCorpus, removePunctuation)
-# remove numbers
-myCorpus <- tm_map(myCorpus, removeNumbers)
-# remove stopwords
-# keep "r" by removing it from stopwords
+myCorpus <- Corpus(DataframeSource(male_train))
+myCorpus <- tm_map(myCorpus, content_transformer(tolower))
 myStopwords <- c(stopwords('english'),stopwords('french'),"http")
-idx <- which(myStopwords == "r")
-myStopwords <- myStopwords[-idx]
-myCorpus <- tm_map(myCorpus, removeWords, myStopwords)
-dictCorpus <- myCorpus
-# stem words in a text document with the snowball stemmers,
-# which requires packages Snowball, RWeka, rJava, RWekajars
-myCorpus <- tm_map(myCorpus, stemDocument)
-# inspect the first three ``documents"
-inspect(myCorpus[1:3])
+myCorpus <- tm_map(myCorpus,removeWords, myStopwords)
+myCorpus <- tm_map(myCorpus, content_transformer(removeNumbers))
+tdm <- TermDocumentMatrix(myCorpus, control = list(removePunctuation = TRUE, stopwords = TRUE,removeNumbers=TRUE))
 
-head(myCorpus)
-# stem completion
-ff = stemCompletion(myCorpus,dictionary = dictCorpus)
-myCorpus <- tm_map(myCorpus, stemCompletion,dictionary=dictCorpus)
-myC = wordStem(dictCorpus,language = "english")
-myDtm <- TermDocumentMatrix(myC, control = list(minWordLength =3))
-myDtm <- TermDocumentMatrix(myCorpus, control = list(minWordLength =3))
-inspect(myDtm[266:270,31:40])
-matrix <- create_matrix(male_train, stemWords=TRUE, removeStopwords=TRUE, minWordLength=2)
-colnames(matrix)
-findFreqTerms(myDtm, lowfreq=10)
+male_test = data.frame(male_data[(round(0.75 * length(male_data))+1):length(male_data)])
+myCorpus <- Corpus(DataframeSource(male_test))
+myCorpus <- tm_map(myCorpus, content_transformer(tolower))
+myStopwords <- c(stopwords('english'),stopwords('french'),"http")
+myCorpus <- tm_map(myCorpus,removeWords, myStopwords)
+myCorpus <- tm_map(myCorpus, content_transformer(removeNumbers))
+testMat <- TermDocumentMatrix(myCorpus, control = list(removePunctuation = TRUE, stopwords = TRUE,removeNumbers=TRUE))
+
+rm(posts2)
+rm(posts)
+rm(post_data)
+rm(male_data)
+rm(male_test)
+rm(male_train)
+rm(myCorpus)
+rm(myStopwords)
+
+
+
+fTrain = findFreqTerms(tdm, lowfreq=10)
+fTest = findFreqTerms(testMat, lowfreq=10)
+cl <- as.character(c(1:length(fTrain)/4))
+cl[1:length(fTrain)/4] <- 'Male'
+train = cbind(fTrain,cl)
+tcl <- as.character(c(1:length(fTest)/4))
+tcl[1:length(fTest)/4] <- 'Male'
+test = cbind(fTest,tcl)
+knn_class <- knn(train,test,cl,k = 1,prob =FALSE)
+ff = as.data.frame(test[1:round(nrow(test)/100)])
+Train = ff$test[1:round(nrow(test)/100)];
+
+hh = rpart(Train ~.,data = ff)
+hh = ctree(Train ~.,data = ff)
+rpart.plot(hh)
+install.packages("party")
+install.packages("rpart.plot")
+library(party)
+library(rpart.plot)
 # which words are associated with "r"?
-findAssocs(myDtm, 'r', 0.30)
-# which words are associated with "mining"?
-# Here "miners" is used instead of "mining",
-# because the latter is stemmed and then completed to "miners". :-(
-findAssocs(myDtm, 'miners', 0.30)
-m <- as.matrix(myDtm)
-# calculate the frequency of words
-v <- sort(rowSums(m), decreasing=TRUE)
-myNames <- names(v)
-k <- which(names(v)=="miners")
-myNames[k] <- "mining"
-d <- data.frame(word=myNames, freq=v)
-wordcloud(d$word, d$freq, min.freq=3)
+tt = findAssocs(tdm, 'female', 0.30)
+wordcloud(dd)
+
+plot(post_data$post_type ~ post_data$id)
+scatter.smooth(x = post_data$post)
+View(stats)
+stats$id = as.character(stats$id)
+plot(stats$no_posts)
